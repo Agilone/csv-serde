@@ -73,15 +73,20 @@ public final class CSVSerde implements SerDe {
 	public void initialize(final Configuration conf, final Properties tbl) throws SerDeException {
 		String header;
 		try {
+			List<String> columnNames = null;
 			separatorChar = getProperty(tbl, "separatorChar", CSVWriter.DEFAULT_SEPARATOR);
 			quoteChar = getProperty(tbl, "quoteChar", CSVWriter.DEFAULT_QUOTE_CHARACTER);
 			escapeChar = getProperty(tbl, "escapeChar", CSVWriter.DEFAULT_ESCAPE_CHARACTER);
+			try {
+				header = getHeader(conf, tbl.getProperty("location"));
+				CSVReader csv = newReader(new CharArrayReader(header.toCharArray()), separatorChar, quoteChar, escapeChar);
+				
+				columnNames = Arrays.asList(csv.readNext());
+			} catch(Exception e) {
+				columnNames = Arrays.asList(tbl.getProperty(Constants.LIST_COLUMNS).split(","));
+			}
 			
-			header = getHeader(conf, tbl.getProperty("location"));
 			
-			CSVReader csv = newReader(new CharArrayReader(header.toCharArray()), separatorChar, quoteChar, escapeChar);
-			
-			final List<String> columnNames = Arrays.asList(csv.readNext());
 			numCols = columnNames.size();
 			
 
